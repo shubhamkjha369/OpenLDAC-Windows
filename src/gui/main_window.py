@@ -29,6 +29,15 @@ class MainWindow(ctk.CTk):
         self.geometry("900x720")
         self.minsize(820, 640)
 
+        # Set window icon if available
+        from pathlib import Path
+        icon_path = Path(__file__).resolve().parent.parent.parent / "assets" / "icon.ico"
+        if icon_path.exists():
+            try:
+                self.iconbitmap(str(icon_path))
+            except Exception:
+                pass
+
         # UI state
         self._is_updating = True
 

@@ -1,4 +1,4 @@
-"""Generates a self-contained Windows Installer for OpenLDAC."""
+"""Generates a self-contained Windows Installer for OpenLDAC with app icon."""
 
 import os
 import shutil
@@ -8,12 +8,21 @@ from pathlib import Path
 def create_installer():
     root = Path(__file__).resolve().parent.parent
     dist_dir = root / "dist" / "OpenLDAC"
+    assets_dir = root / "assets"
     output_dir = root / "dist" / "installer"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     if not dist_dir.exists():
         print(f"[ERROR] Dist directory not found: {dist_dir}")
         return False
+
+    # Copy assets into dist/OpenLDAC/assets
+    target_assets = dist_dir / "assets"
+    target_assets.mkdir(parents=True, exist_ok=True)
+    if assets_dir.exists():
+        for f in assets_dir.glob("*"):
+            if f.is_file():
+                shutil.copy2(f, target_assets / f.name)
 
     # 1. Create a zip distribution package
     zip_path = output_dir / "OpenLDAC-v1.0.0-win-x64.zip"
@@ -54,6 +63,10 @@ $Shortcut = $WshShell.CreateShortcut("$DesktopPath\OpenLDAC.lnk")
 $Shortcut.TargetPath = "$InstallDir\OpenLDAC.exe"
 $Shortcut.WorkingDirectory = $InstallDir
 $Shortcut.Description = "OpenLDAC High-Resolution Bluetooth Audio"
+$IconPath = "$InstallDir\assets\icon.ico"
+if (Test-Path $IconPath) {
+    $Shortcut.IconLocation = "$IconPath, 0"
+}
 $Shortcut.Save()
 
 # Create Uninstaller Script
@@ -81,10 +94,6 @@ pause
 """, encoding="utf-8")
 
     print(f"[SUCCESS] Installer created at: {output_dir}")
-    print(f"Files generated:")
-    print(f"  - {zip_path}")
-    print(f"  - {setup_script}")
-    print(f"  - {batch_setup}")
     return True
 
 if __name__ == "__main__":
